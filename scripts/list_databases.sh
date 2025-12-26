@@ -6,10 +6,10 @@ db_path="./Databases"
 if [[ -d "$db_path" ]]; then
     # Check if folder database is empty or not
     if [ -z "$(ls -A "$db_path")" ]; then
-        echo "Database is empty"
+        echo "No databases found."
     else
         echo "Available Databases:"
-        ls -d "$db_path"/*/
+        ls "$db_path"/
     fi
 else
     echo "No databases found."

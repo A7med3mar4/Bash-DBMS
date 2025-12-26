@@ -14,7 +14,6 @@ read db_name
 if [[ -d "$db_path/$db_name" ]]; then
     echo "Database already exists!"
 else
-    
     mkdir "$db_path/$db_name"
     echo "Database '$db_name' created successfully."
 fi

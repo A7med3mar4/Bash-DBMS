@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 select option in "Create Table" "List Tables" "Drop Table" "Insert into Table" "Select From Table"  "Delete From Table" "Update Table" "Back to Main Menu"
 do 
@@ -33,7 +33,8 @@ do
         ;;
         8) 
         echo back to menu 
-        #./main.sh 
+        ./scripts/main_menu.sh
+        exit
         ;;
         *) echo "Invalid option. Please try again." 
         ;;
