@@ -6,7 +6,7 @@ do
     case $REPLY in 
         1) 
         echo Create Table 
-        #./scripts/create_table.sh $database_name 
+        ./scripts/create_table.sh $database_name 
         ;;
         2) 
         echo List tables 
