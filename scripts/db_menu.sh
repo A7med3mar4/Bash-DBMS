@@ -30,7 +30,7 @@ do
         ;;
         7) 
         echo Update Table 
-        #./scripts/update_table.sh $database_name
+        ./scripts/update_table.sh $database_name
         ;;
         8) 
         echo back to menu 
