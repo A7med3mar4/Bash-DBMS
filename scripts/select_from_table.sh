@@ -6,6 +6,8 @@ echo "----------------------------------"
 echo "-------- SELECT FROM TABLE -------"
 echo "----------------------------------"
 echo ""
+./scripts/list_tables.sh $database_name
+echo ""
 db_path="./Databases"
 echo -n "Enter table name: "
 read table_name
