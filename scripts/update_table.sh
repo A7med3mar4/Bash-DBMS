@@ -23,8 +23,7 @@ if [[ -f "$table_path" ]]; then
     
     col_name=${col_array[$((col_num-1))]}
     read -p"Enter the condition value to identify rows to update (e.g., ID=5): " condition
-    read -p"Enter the new value for column '$col_name': " new_value
-    
+
     # Extract condition column and value
     IFS='=' read -r cond_col cond_value <<< "$condition"
 
@@ -34,7 +33,19 @@ if [[ -f "$table_path" ]]; then
         echo "Column $cond_col not found"
         exit 1
     fi
-    
+    IFS=':' read -r -a data_type <<< $(sed -n '2p' "$table_path")
+    read -p"Enter the new value for column '$col_name': " new_value
+    if [[ "${data_type[$col_num-1]}" == "int" ]]; then   #### float check and date check can be added here as further enhancement ####
+        # Validate integer input
+        while ! [[ "$new_value" =~ ^-?[0-9]+$ ]]; do
+            if [[ -z "$new_value" ]]; then
+                break
+            fi
+            echo "Invalid input. Please enter an integer value for ${column[$i]}."
+            read -p"Enter value for ${column[$i]}: " new_value
+        done
+    fi
+
     # Update the table
     awk -F: -v OFS=: -v col_idx="$((col_num))" -v cond_idx="$cond_index" -v cond_val="$cond_value" -v new_val="$new_value" '
     NR <= 3 { print; next }
