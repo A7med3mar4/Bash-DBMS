@@ -10,8 +10,18 @@ echo ""
 #read name from user
 echo -n "Enter the name of table: "
 read table_name
+# Check for empty table name
+if [[ -z "$table_name" ]]; then
+    echo "Table name cannot be empty!"
+    exit 1
+fi
+# Check for invalid characters in table name
+if [[ "$table_name" =~ [/:\"\'\\\?\*\<\>\|] ]]; then
+    echo "Table name contains invalid characters! Please avoid / : \" ' \ ? * < > |"
+    exit 1
+fi
 # save path 
-table_path=$db_path/$database_name/$table_name
+table_path="$db_path"/"$database_name"/"$table_name"
 
 #check if table exists or not
 if [ -f "$table_path" ];then
@@ -31,7 +41,12 @@ else
         read col_name
         echo -n "Enter datatype of $col_name (int|string): "
         read col_type
-        #check if column is the frist or not
+        while [[ "$col_type" != "int" && "$col_type" != "string" ]]; do
+            echo "Invalid datatype. Please enter 'int' or 'string'."
+            echo -n "Enter datatype of $col_name (int|string): "
+            read col_type
+        done
+        #check if column is the first or not
         if [ $i -eq 1 ]; then
             columns="$col_name"
             data_types="$col_type"
@@ -40,14 +55,25 @@ else
             data_types="$data_types:$col_type"
         fi
     done
-    #read pk for which col from user
-    echo -n "Enter Primary key column name: "
-    read pk
+    IFS=':' read -ra col_array <<< "$columns"
+    while true; do
+        #read pk for which col from user
+        echo -n "Enter Primary key column name: "
+        read pk
+        # Validate that the primary key exists in the columns
+        if [[ -z "$pk" ]]; then
+            echo "Primary key column name cannot be empty. Please enter a valid column name."
+        elif [[ ! " ${col_array[*]} " =~ " $pk " ]]; then
+            echo "Column '$pk' does not exist in the table. Please enter a valid column name."
+        else
+            break
+        fi
+    done
     #create table
     touch "$table_path"
     #write pk of table
     echo "PK:$pk" >> "$table_path"
-    #write datatype of columns 
+    #write datatype of columns  
     echo "$data_types" >> "$table_path"
     #write name of columns 
     echo "$columns" >> "$table_path"
