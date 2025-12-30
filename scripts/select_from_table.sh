@@ -15,8 +15,8 @@ table_path="$db_path/$database_name/$table_name"
 # check table exists
 if [ -f "$table_path" ]; then
     # select all from table
-    echo "1) Select All"
-    echo "2) Select With WHERE"
+    echo "1) Select without condition"
+    echo "2) Conditional Select"
     echo -n "Choose option: "
     read choice
     columns=$(sed -n '3p' "$table_path")
@@ -45,25 +45,52 @@ if [ -f "$table_path" ]; then
     #function to print all columns or part of columns
     print_selected_cols() {
         awk -F: -v cols="$display_indexes" '
+        BEGIN {
+            if (cols != "") {
+                split(cols, sel, " ")
+            }
+        }
+
+        NR==1 {
+            # Header
+            if (cols == "") {
+                for (i=1;i<=NF;i++)
+                    printf "| %-15s ", $i
+            } else {
+                for (i in sel)
+                    printf "| %-15s ", $(sel[i])
+            }
+            print "|"
+
+            # Separator
+            for (i=1;i<= (cols==""?NF:length(sel)); i++)
+                printf "+%.17s", "-----------------------"
+            print "+"
+            next
+        }
+
         {
             if (cols == "") {
-                print
+                for (i=1;i<=NF;i++)
+                    printf "| %-15s ", $i
             } else {
-                split(cols, a, " ")
-                out=""
-                for (i in a)
-                    out = out $(a[i]) ":"
-                sub(/:$/, "", out)
-                print out
+                for (i=1; i<=length(sel); i++)
+                    printf "| %-15s ", $(sel[i])
             }
-        }'
-    }       
+            print "|"
+        }
+        '
+    }
+
  
     case $choice in
         1)
             # Select All
-            awk -F: 'NR>3 { print }' "$table_path" | print_selected_cols
-        ;;
+            {
+                sed -n '3p' "$table_path"
+                awk -F: 'NR>3 { print }' "$table_path"     
+            } | print_selected_cols 
+            ;;
         2)
             # -------- Select With WHERE --------
            #get operator  
@@ -124,9 +151,9 @@ if [ -f "$table_path" ]; then
             fi
             #print name of columns
             columns=$(sed -n '3p' "$table_path")
-            echo "----------------------------"
-            echo "$columns"
-            echo "----------------------------"
+            # echo "----------------------------"
+            # echo "$columns"
+            # echo "----------------------------"
            # Get column numbers
            # if choice AND or OR
             if [ "$op" -eq 9 ] || [ "$op" -eq 10 ]; then
@@ -155,76 +182,95 @@ if [ -f "$table_path" ]; then
             case $op in
             1)
                 # =
-                awk -F: -v c="$col_num" -v v="$value" \
-                'NR > 3 && $c == v { print }' "$table_path" \
-                | print_selected_cols
-
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c="$col_num" -v v="$value" \
+                    'NR > 3 && $c == v { print }' "$table_path"
+                } | print_selected_cols
                 ;;
             2)
-                 # >
-                awk -F: -v c="$col_num" -v v="$value" \
-                'NR > 3 && $c > v { print }' "$table_path" \
-                | print_selected_cols
+                # >
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c="$col_num" -v v="$value" '
+                    NR > 3 && $c > v { print }' "$table_path" 
+                } | print_selected_cols
                 ;;
             3)
                 # <
-                awk -F: -v c="$col_num" -v v="$value" \
-                'NR > 3 && $c < v { print }' "$table_path" \
-                | print_selected_cols
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c="$col_num" -v v="$value" '
+                    NR > 3 && $c < v { print }' "$table_path" 
+                } | print_selected_cols
                 ;; 
             4)
-                 # !=
-                awk -F: -v c="$col_num" -v v="$value" \
-                'NR > 3 && $c != v { print }' "$table_path" \
-                | print_selected_cols
+                # !=
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c="$col_num" -v v="$value"'
+                    NR > 3 && $c != v { print }' "$table_path"
+                } | print_selected_cols
                 ;;
             5)
                 # >=
-                awk -F: -v c="$col_num" -v v="$value" \
-                'NR > 3 && $c >= v { print }' "$table_path" \
-                | print_selected_cols
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c="$col_num" -v v="$value"'
+                    NR > 3 && $c >= v { print }' "$table_path" 
+                } | print_selected_cols
                 ;;
             6)
                 # <=
-                awk -F: -v c="$col_num" -v v="$value" \
-                'NR > 3 && $c <= v { print }' "$table_path" \
-                | print_selected_cols
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c="$col_num" -v v="$value"'
+                    NR > 3 && $c <= v { print }' "$table_path" 
+                } | print_selected_cols
                 ;;
             7)
                 # between
-                awk -F: -v c="$col_num" -v s="$start" -v e="$end" \
-                'NR > 3 && $c >= s && $c <= e { print }' "$table_path" \
-                | print_selected_cols
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c="$col_num" -v s="$start" -v e="$end" '
+                    NR > 3 && $c >= s && $c <= e { print }' "$table_path" 
+                } | print_selected_cols
                 ;;
             8)
                 # IN
-                awk -F: -v c="$col_num" -v vals="$in_values" '
-                BEGIN {
-                    split(vals, arr, ":")
-                }
-                NR > 3 {
-                    for (i in arr) {
-                        if ($c == arr[i]) {
-                            print
-                            break
-                        }
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c="$col_num" -v vals="$in_values" '
+                    BEGIN {
+                        split(vals, arr, ":")
                     }
-                }' "$table_path" \
-                | print_selected_cols
+                    NR > 3 {
+                        for (i in arr) {
+                            if ($c == arr[i]) {
+                                print
+                                break
+                            }
+                        }
+                    }' "$table_path"
+                } | print_selected_cols
                 ;;
             9)
                 #And
-                awk -F: -v c1="$col_num1" -v v1="$val1" \
-                    -v c2="$col_num2" -v v2="$val2" \
-                'NR > 3 && $c1 == v1 && $c2 == v2 { print }' "$table_path" \
-                | print_selected_cols
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c1="$col_num1" -v v1="$val1" \
+                    -v c2="$col_num2" -v v2="$val2" '
+                    NR > 3 && $c1 == v1 && $c2 == v2 { print }' "$table_path" 
+                } | print_selected_cols
                 ;;
             10) 
                 # OR
-                awk -F: -v c1="$col_num1" -v v1="$val1" \
-                    -v c2="$col_num2" -v v2="$val2" \
-                'NR > 3 && ($c1==v1 || $c2==v2) { print }' "$table_path" \
-                | print_selected_cols
+                {
+                    sed -n '3p' "$table_path"
+                    awk -F: -v c1="$col_num1" -v v1="$val1" \
+                    -v c2="$col_num2" -v v2="$val2" '
+                    NR > 3 && ($c1==v1 || $c2==v2) { print }' "$table_path" 
+                } | print_selected_cols
                 ;;
             *)
                 echo "Invalid operator!"

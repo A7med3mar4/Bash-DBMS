@@ -143,14 +143,13 @@ value1:value2:value3
 
 * Support for additional data types (float, date)
 * Foreign key support
-* Transaction simulation
 
 ---
 
-## Author
-Mahmoud Salah
-Ahmed Omar
-ITI – Bash Shell Scripting Project
+## Authors
+
+* Ahmed Omar
+* Mahmoud Salah
 
 ---
 
