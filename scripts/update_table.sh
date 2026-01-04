@@ -15,7 +15,7 @@ table_path="$db_path/$database_name/$table_name"
 # Check if table exists
 if [[ -f "$table_path" ]]; then
     # Read column names from the third line of the table file
-    columns=$(sed -n '3p' "$table_path")
+    columns=$(sed -n '3p' "$table_path".metadata)
     IFS=':' read -r -a col_array <<< "$columns"
     
     echo "Columns in the table: "
@@ -36,13 +36,13 @@ if [[ -f "$table_path" ]]; then
     IFS='=' read -r cond_col cond_value <<< "$condition"
 
     # Get the index of the condition column
-    cond_index=$(awk -F':' -v col="$cond_col" 'NR==3 { for(i=1; i<=NF; i++) { if($i == col) { print i; exit } } }' "$table_path")
+    cond_index=$(awk -F':' -v col="$cond_col" 'NR==3 { for(i=1; i<=NF; i++) { if($i == col) { print i; exit } } }' "$table_path".metadata)
     if [ -z "$cond_index" ]; then
         echo "Column $cond_col not found"
         sleep 2
         exit 1
     fi
-    IFS=':' read -r -a data_type <<< $(sed -n '2p' "$table_path")
+    IFS=':' read -r -a data_type <<< $(sed -n '2p' "$table_path".metadata)
     read -p"Enter the new value for column '$col_name': " new_value
     if [[ "${data_type[$col_num-1]}" == "int" ]]; then   #### float check and date check can be added here as further enhancement ####
         # Validate integer input
@@ -67,7 +67,7 @@ if [[ -f "$table_path" ]]; then
             exit 1
         fi
         # Check for uniqueness of primary key
-        if awk -F: -v c="$col_num" -v val="$new_value" 'NR>3 && $c == val {exit 1}' "$table_path"; then
+        if awk -F: -v c="$col_num" -v val="$new_value" '$c == val {exit 1}' "$table_path".metadata; then
             :
         else
             echo "Value '$new_value' already exists in column $col_name. Please enter a unique value."
