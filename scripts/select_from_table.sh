@@ -26,9 +26,7 @@ if [ -f "$table_path" ]; then
     # Ask user which columns to display
     echo -n "Enter columns to display separated by colon (e.g. id, name, age) or * for all: "
     read display_cols
-    echo "$display_cols"
     display_cols=$(echo "$display_cols" | tr -d ' ')
-    echo "$display_cols"
     if [ "$display_cols" = "*" ]; then
             display_indexes=""
     else
