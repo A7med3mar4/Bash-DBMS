@@ -26,7 +26,6 @@ if [[ -f "$table_path" ]]; then
     read -p"Enter the column number to update: " col_num
     if (( col_num < 1 || col_num > ${#col_array[@]} )); then
         echo "Invalid column number."
-        sleep 2
         exit 1
     fi
     
@@ -37,9 +36,14 @@ if [[ -f "$table_path" ]]; then
 
     # Get the index of the condition column
     cond_index=$(awk -F':' -v col="$cond_col" 'NR==3 { for(i=1; i<=NF; i++) { if($i == col) { print i; exit } } }' "$table_path".metadata)
+    cond_val_index=$(awk -F':' -v col="$cond_value" '{for(i=1; i<=NF; i++) { if($i == col) { print i; exit } } }' "$table_path")
+
     if [ -z "$cond_index" ]; then
         echo "Column $cond_col not found"
-        sleep 2
+        exit 1
+    fi
+    if [ -z "$cond_val_index" ]; then
+        echo "Value $cond_value not found"
         exit 1
     fi
     IFS=':' read -r -a data_type <<< $(sed -n '2p' "$table_path".metadata)
@@ -56,14 +60,12 @@ if [[ -f "$table_path" ]]; then
     fi
     if [[ "$new_value" == *:* ]]; then
         echo "Value cannot contain colon (:). Please enter a valid value."
-        sleep 2
         exit 1
     fi
     IFS=':' read -r PK PK_col <<< "$(sed -n '1p' "$table_path".metadata)"
     if [[ "$col_name" == "$PK_col" ]]; then
         if [[ -z "$new_value" ]]; then
             echo "Primary key value cannot be NULL. Please enter a valid value."
-            sleep 2
             exit 1
         fi
         # Check for uniqueness of primary key
@@ -71,7 +73,6 @@ if [[ -f "$table_path" ]]; then
             :
         else
             echo "Value '$new_value' already exists in column $col_name. Please enter a unique value."
-            sleep 2
             exit 1
         fi
     fi
